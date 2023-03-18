@@ -29,4 +29,25 @@ async function getAllProducts(req, res, next) {
   }
 }
 
-module.exports = { getAllProducts };
+async function getProductByID(req, res, next) {
+  try {
+    // Find product by ID
+    const product = await productModel.findById(req.params.id);
+
+    // Product not found
+    if (!product) {
+      return next(new ErrorResponse(`Product with ID ${req.params.id} was not found`), 404);
+    }
+
+    // JSON response
+    res.json({
+      success: true,
+      statusCode: 200,
+      response: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getAllProducts, getProductByID };
