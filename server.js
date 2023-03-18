@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const userRouter = require("./routes/userRoutes");
 const connectToDB = require("./database/connectToDB");
 const productRouter = require("./routes/productRoutes");
 const errorHandler = require("./middleware/errorHandler");
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/products", productRouter);
+app.use("/api/users", userRouter);
 
 // Error handling middleware
 app.use(errorHandler);
