@@ -57,4 +57,16 @@ async function login(req, res, next) {
   }
 }
 
-module.exports = { register, login };
+async function getUserProfile(req, res, next) {
+  try {
+    res.json({
+      success: true,
+      statusCode: 200,
+      response: req.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { register, login, getUserProfile };
