@@ -6,6 +6,10 @@ function errorHandler(err, req, res, next) {
   console.log(err.code);
   console.log(err.name);
 
+  if (err.name === "CastError") {
+    error = new ErrorResponse("Invalid ID. ID must be a string of 12 bytes.", 400);
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     statusCode: error.statusCode || 500,
