@@ -50,4 +50,21 @@ async function getProductByID(req, res, next) {
   }
 }
 
-module.exports = { getAllProducts, getProductByID };
+async function getMultipleProductsById(req, res, next) {
+  const { ids } = req.body;
+  try {
+    const products = await productModel.find({ _id: { $in: ids } });
+    if (!products) {
+      return next(new ErrorResponse("product(s) not found.", 404));
+    }
+    res.json({
+      success: true,
+      statusCode: 200,
+      response: products,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { getAllProducts, getProductByID, getMultipleProductsById };

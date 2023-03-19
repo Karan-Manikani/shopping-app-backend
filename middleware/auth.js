@@ -1,21 +1,26 @@
 require("dotenv").config();
-const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
-const ErrorResponse = require("../utils/errorResponse");
+const JWTStrategy = require("passport-jwt").Strategy;
+const ExtractJWT = require("passport-jwt").ExtractJwt;
 
-async function auth(req, res, next) {
-  try {
-    const token = req.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await userModel.findOne({ id: decoded.id });
-    if (!user) {
-      return next(new ErrorResponse("Couldn't find user", 404));
-    }
-    req.user = user;
-    next();
-  } catch (error) {
-    next(new ErrorResponse("Unauthorized", 401));
-  }
-}
+const options = {};
+options.jwtFromRequest = ExtractJWT.fromAuthHeaderAsBearerToken();
+options.secretOrKey = process.env.JWT_SECRET;
+options.passReqToCallback = true;
 
-module.exports = auth;
+module.exports = (passport) => {
+  passport.use(
+    new JWTStrategy(options, (req, jwt_payload, done) => {
+      userModel.findById(jwt_payload.id, (error, user) => {
+        if (error) {
+          done(error, false);
+        } else if (user) {
+          req.user = user;
+          done(null, user);
+        } else {
+          done(null, false);
+        }
+      });
+    })
+  );
+};

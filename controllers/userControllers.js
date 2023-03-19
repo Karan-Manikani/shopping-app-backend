@@ -1,4 +1,5 @@
 const userModel = require("../models/userModel");
+const productModel = require("../models/productModel");
 const ErrorResponse = require("../utils/errorResponse");
 
 async function register(req, res, next) {
@@ -69,4 +70,76 @@ async function getUserProfile(req, res, next) {
   }
 }
 
-module.exports = { register, login, getUserProfile };
+async function addToCart(req, res, next) {
+  const { productId } = req.body;
+  try {
+    // Find the product by id and check if they exist in the database
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return next(new ErrorResponse(`Product with ID ${productId} was not found.`, 404));
+    }
+
+    // Check if the product already exists in the user's cart. If it doesn't then we add it to the array, otherwise we throw an error
+    const productInCart = req.user.cart.find((item) => item.toString() === productId);
+    if (productInCart) {
+      return next(new ErrorResponse("Product already exists in the cart", 403));
+    }
+    req.user.cart.push(product._id);
+
+    // Save the changes onto the database
+    await req.user.save();
+    res.json({
+      success: true,
+      statusCode: 200,
+      response: req.user,
+      message: "Product added to cart",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function RemoveFromCart(req, res, next) {
+  const { productId } = req.body;
+  try {
+    // Find the product by id and check if they exist in the database
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return next(new ErrorResponse(`Product with ID ${productId} was not found.`, 404));
+    }
+
+    // Check if the product already exists in the user's cart. If it does then we filter it out of the array, otherwise we throw an error
+    const productInCart = req.user.cart.find((item) => item.toString() === productId);
+    if (!productInCart) {
+      return next(new ErrorResponse("Product does not exist in the cart", 403));
+    }
+    req.user.cart = req.user.cart.filter((item) => item.toString() !== productId);
+
+    // Save the changes onto the database
+    await req.user.save();
+    res.json({
+      success: true,
+      statusCode: 200,
+      response: req.user,
+      message: "Product removed from cart",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteUserProfile(req, res, next) {
+  try {
+    await req.user.remove();
+    res.json({
+      success: true,
+      statusCode: 200,
+      response: "Deleted successfully",
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { register, login, getUserProfile, addToCart, RemoveFromCart, deleteUserProfile };
